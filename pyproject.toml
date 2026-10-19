@@ -7,7 +7,10 @@ requires-python = ">=3.14"
 dependencies = [
     "dotenv>=0.9.9",
     "fastapi[standard]>=0.143.3",
+    "httpx2>=2.14.0",
     "pwdlib[argon2]>=0.3.1",
     "pyjwt>=2.15.1",
+    "pytest>=9.1.1",
     "ruff>=0.17.1",
+    "sqlmodel>=0.0.48",
 ]
