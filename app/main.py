@@ -6,29 +6,30 @@ import os
 from fastapi.params import Body
 from pydantic import BaseModel, Field
 from fastapi.exceptions import HTTPException
+from itertools import count
 
 app = FastAPI()
 
 load_dotenv()
 
-counter = 1
+_next_id = count(start=1)
 
 db = {}
 
 
-class TodoRequestModel(BaseModel):
+
+class TodoTaskCreate(BaseModel):
     title: str
     description: str
-
-
-class TodoItemResponse(BaseModel):
+    
+class TodoTaskPublic(BaseModel):
     id: int
     title: str
     description: str
 
 
 class TodoDataResponse(BaseModel):
-    data: list[TodoItemResponse]
+    data: list[TodoTaskPublic]
     page: int
     limit: int
     total: int
@@ -36,35 +37,32 @@ class TodoDataResponse(BaseModel):
 
 @app.post("/todos", status_code=201)
 async def create_todo_item(
-    item: Annotated[TodoRequestModel, Body()],
-) -> TodoItemResponse:
-    global counter
-    item_dict = item.model_dump()
-    item_dict.update({"id": counter})
-    db[counter] = item_dict
-    counter += 1
-    return TodoItemResponse(**item_dict)
-
+    task: Annotated[TodoTaskCreate, Body()],
+) -> TodoTaskPublic:
+    record_id = next(_next_id)
+    record = TodoTaskPublic(id=record_id, **task.model_dump())
+    record_dict = record.model_dump()
+    db[record_id] = record_dict 
+    return record
 
 @app.get("/todos")
-async def read_items() -> TodoDataResponse:
-    return {"data": db, "page": 1, "limit": 10, "total": len(db)}
+async def read_records() -> TodoDataResponse:
+    return {"data": db.values(), "page": 1, "limit": 10, "total": len(db)}
 
-@app.delete("/todos/{item_id}", status_code=204)
-async def delete_item(item_id: int):
-    for index in range(0,len(db)):
-        if db[index].id == item_id:
-            raise HTTPException(status_code=404, detail="No todo item found for that user.")
-        else:
-            db.pop(index)
-            break
+@app.delete("/todos/{record_id}", status_code=204)
+async def delete_record(record_id: int):
+    if record_id in db.keys():
+            raise HTTPException(status_code=404, detail=f"No todo task with id {record_id} found")
+    db.pop(record_id)
 
-@app.put("/todos/{item_id}")
-async def update_item(item_id: int, body: Annotated[TodoRequestModel, Body()]) -> TodoItemResponse:
-    for index,item in enumerate(db):
-        if item.id == item_id:
-            db[index] = body
-    pass
+@app.put("/todos/{record_id}")
+async def update_item(record_id: int, body: Annotated[TodoTaskCreate, Body()]) -> TodoTaskPublic:
+    if record_id not in db:
+        raise HTTPException(status_code=404, detail=f"No todo task with id {record_id} found")
+    
+    task = TodoTaskPublic(id=record_id, **body.model_dump())
+    db[record_id] = task.model_dump()
+    return task
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
