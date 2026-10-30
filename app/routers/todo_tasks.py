@@ -21,7 +21,7 @@ def create_todo_item(
     session.refresh(record)
     return record
 
-@router.get("/")
+@router.get("")
 def read_records(session: SessionDep) -> TodoDataResponse:
     data = session.exec(select(TodoTask)).all()
     record_count = session.exec(select(func.count()).select_from(TodoTask)).one()
@@ -35,7 +35,7 @@ def read_record(record_id: int, session:SessionDep) -> TodoTaskPublic:
     return record
 
 @router.delete("/{record_id}", status_code=204)
-async def delete_record(record_id: int, session: SessionDep):
+def delete_record(record_id: int, session: SessionDep):
     record = session.get(TodoTask, record_id)
     if record is None:
             raise HTTPException(status_code=404, detail=f"No todo task with id {record_id} found")
@@ -48,7 +48,7 @@ def update_record(record_id: int, body: Annotated[TodoTaskCreate, Body()], sessi
     if record is None:
         raise HTTPException(status_code=404, detail=f"No todo task with id {record_id} found")    
 
-    record.sqlmodel_update(body.model_dump(exclude_unset=True))
+    record.sqlmodel_update(body.model_dump())
     session.commit()
     session.refresh(record)
     return record

@@ -12,8 +12,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-load_dotenv()
-
 app.include_router(auth.router)
 app.include_router(todo_tasks.router)
 

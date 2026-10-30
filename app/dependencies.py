@@ -8,10 +8,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DB_DIR = Path("data")
-sqlite_db_url = os.getenv("SQLITE_URL") 
+sqlite_db_url = os.getenv("SQLITE_URL")
 
 connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_db_url, connect_args=connect_args)
+try:
+    engine = create_engine(sqlite_db_url, connect_args=connect_args)
+except Exception:
+    raise
 
 def create_database_and_tables():
     DB_DIR.mkdir(parents=True, exist_ok=True)
