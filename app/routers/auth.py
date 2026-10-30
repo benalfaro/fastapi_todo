@@ -2,7 +2,9 @@ from typing import Annotated
 from fastapi.routing import APIRouter
 from fastapi import Body, Depends, Form
 from fastapi.security import OAuth2PasswordRequestFormStrict
-
+from app.models.table_models import UserInDB
+from app.models.schemas import UserRequest
+from sqlmodel import Session, select
 from app.dependencies import SessionDep, get_session
 
 router = APIRouter(
@@ -10,9 +12,22 @@ router = APIRouter(
     responses={401: {"description": "Unauthorized"}}
 )
 
+# see if username exists in the database already
+# see if email exists in the database already
+# if not then add user to the database and hash password
+
 @router.post("/register")
-async def create_user():
-    pass
+async def create_user(client_credentials: Annotated[UserRequest, Form()], session: SessionDep):
+    # session.exec(select(UserInDB, client_credentials))
+
+
+    """
+        Schemas:
+        User Request Model
+    
+    
+    
+    """
 
 # take in the user data as form data
 # UserModel should take in and validate email, password(length> 12char), name(length>0)
